@@ -1,3 +1,5 @@
+let highlightedNode = null;
+
 async function fetchData() {
     try {
         const param = document.getElementById('paramInput').value;
@@ -33,7 +35,7 @@ async function fetchData() {
                 }
             ],
             layout: {
-                name: 'cose'
+                name: 'cose' // Utilisation de 'cose' pour initialement bien positionner le graphe
             }
         });
 
@@ -41,11 +43,17 @@ async function fetchData() {
 
         // Ajouter l'événement contextmenu sur les nœuds
         cy.on('cxttap', 'node', function(evt) {
-            // Empêcher l'affichage du menu contextuel standard du navigateur
-            evt.preventDefault();
-
-            console.log('Right-click on node detected olivier');
+            console.log('Right-click on node detected');
             const node = evt.target;
+
+            // Remove highlight from the previously highlighted node
+            if (highlightedNode) {
+                highlightedNode.style('background-color', '#0074D9');
+            }
+
+            // Highlight the clicked node
+            node.style('background-color', '#FF4136');
+            highlightedNode = node;
 
             // Créer le menu contextuel s'il n'existe pas
             let menu = document.getElementById('contextMenu');
@@ -54,11 +62,13 @@ async function fetchData() {
                 menu.id = 'contextMenu';
                 document.body.appendChild(menu);
             }
-            
+
+            // Empêcher l'affichage du menu contextuel standard du navigateur
+            evt.preventDefault();
 
             menu.style.top = `${evt.originalEvent.clientY}px`;
             menu.style.left = `${evt.originalEvent.clientX}px`;
-            menu.style.display = 'block';
+            menu.classList.add('show');
 
             // Ajouter un bouton au menu
             const addNodeButton = document.createElement('button');
@@ -73,8 +83,21 @@ async function fetchData() {
                 });
                 const newNodes = await response.json();
                 cy.add(newNodes);
-                cy.layout({ name: 'cose' }).run();
-                menu.style.display = 'none';
+
+                // Distribuer les nouveaux nœuds autour du nœud cliqué sur la circonférence d'un cercle
+                const radius = 100; // Rayon du cercle
+                const angleStep = (2 * Math.PI) / newNodes.length;
+                newNodes.forEach((element, index) => {
+                    if (element.data) {
+                        const angle = index * angleStep;
+                        cy.getElementById(element.data.id).position({
+                            x: node.position('x') + radius * Math.cos(angle),
+                            y: node.position('y') + radius * Math.sin(angle)
+                        });
+                    }
+                });
+
+                menu.classList.remove('show');
             };
 
             // Effacer le contenu précédent du menu et ajouter le bouton
@@ -86,7 +109,19 @@ async function fetchData() {
         document.addEventListener('click', function(event) {
             const contextMenu = document.getElementById('contextMenu');
             if (contextMenu && !contextMenu.contains(event.target)) {
-                contextMenu.style.display = 'none';
+                contextMenu.classList.remove('show');
+            }
+        });
+
+        // Recalculer la position de tous les nœuds
+        document.getElementById('recalculateButton').addEventListener('click', function() {
+            cy.layout({
+                name: 'cose'
+            }).run();
+
+            // Maintenir la couleur du dernier nœud sélectionné
+            if (highlightedNode) {
+                highlightedNode.style('background-color', '#FF4136');
             }
         });
 

@@ -26,7 +26,7 @@ def add_nodes():
     source_id = data.get('source_id')
     new_nodes = []
     for i in range(4):
-        new_node_id = f'{source_id}_new_{i}'
+        new_node_id = f'{source_id}{i}'
         new_nodes.append(
             {'data': {'id': new_node_id}}
         )
