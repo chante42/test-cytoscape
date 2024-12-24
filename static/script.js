@@ -1,12 +1,12 @@
 async function fetchData() {
     try {
         const param = document.getElementById('paramInput').value;
-        console.log('Fetching data with param:', param);  // Journal de débogage
+        console.log('Fetching data with param:', param);
         const response = await fetch(`/data?param=${encodeURIComponent(param)}`);
         const data = await response.json();
         
         document.getElementById('content').innerText = data.message;
-        console.log('Data received:', data);  // Journal de débogage
+        console.log('Data received:', data);
 
         const cy = cytoscape({
             container: document.getElementById('cy'),
@@ -37,61 +37,56 @@ async function fetchData() {
             }
         });
 
-        console.log('Graph initialized');  // Journal de débogage
+        console.log('Graph initialized');
 
-        // Ajout d'un écouteur d'événement contextuel globalement sur le conteneur de Cytoscape
-        cy.container().addEventListener('contextmenu', function(evt) {
+        // Ajouter l'événement contextmenu sur les nœuds
+        cy.on('cxttap', 'node', function(evt) {
+            // Empêcher l'affichage du menu contextuel standard du navigateur
             evt.preventDefault();
-            const rect = cy.container().getBoundingClientRect();
-            const x = evt.clientX - rect.left;
-            const y = evt.clientY - rect.top;
-            const target = cy.elements().filter(ele => ele.isNode() && ele.renderedBoundingBox().x1 <= x && ele.renderedBoundingBox().x2 >= x && ele.renderedBoundingBox().y1 <= y && ele.renderedBoundingBox().y2 >= y)[0];
 
-            if (target) {
-                console.log('Right-click on node detected');  // Journal de débogage
+            console.log('Right-click on node detected olivier');
+            const node = evt.target;
 
-                if (document.getElementById('contextMenu')) {
-                    document.getElementById('contextMenu').remove();
-                }
-
-                const menu = document.createElement('div');
+            // Créer le menu contextuel s'il n'existe pas
+            let menu = document.getElementById('contextMenu');
+            if (!menu) {
+                menu = document.createElement('div');
                 menu.id = 'contextMenu';
-                menu.style.position = 'absolute';
-                menu.style.top = `${evt.clientY}px`;
-                menu.style.left = `${evt.clientX}px`;
-                menu.style.background = 'white';
-                menu.style.border = '1px solid #ccc';
-                menu.style.padding = '10px';
-
-                const addNodeButton = document.createElement('button');
-                addNodeButton.innerText = 'Ajouter 4 nœuds';
-                addNodeButton.onclick = async function() {
-                    console.log('Add node button clicked');  // Journal de débogage
-                    const response = await fetch('/add_nodes', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ source_id: target.id() })
-                    });
-                    const newNodes = await response.json();
-                    console.log('New nodes received:', newNodes);  // Journal de débogage
-                    cy.add(newNodes);
-                    cy.layout({ name: 'cose' }).run();
-                    menu.remove();
-                };
-
-                menu.appendChild(addNodeButton);
                 document.body.appendChild(menu);
-            } else {
-                console.log('Right-click not on a node');  // Journal de débogage
             }
+            
+
+            menu.style.top = `${evt.originalEvent.clientY}px`;
+            menu.style.left = `${evt.originalEvent.clientX}px`;
+            menu.style.display = 'block';
+
+            // Ajouter un bouton au menu
+            const addNodeButton = document.createElement('button');
+            addNodeButton.innerText = 'Ajouter 4 nœuds';
+            addNodeButton.onclick = async function() {
+                const response = await fetch('/add_nodes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ source_id: node.id() })
+                });
+                const newNodes = await response.json();
+                cy.add(newNodes);
+                cy.layout({ name: 'cose' }).run();
+                menu.style.display = 'none';
+            };
+
+            // Effacer le contenu précédent du menu et ajouter le bouton
+            menu.innerHTML = '';
+            menu.appendChild(addNodeButton);
         });
 
+        // Cacher le menu contextuel lorsqu'on clique en dehors
         document.addEventListener('click', function(event) {
             const contextMenu = document.getElementById('contextMenu');
             if (contextMenu && !contextMenu.contains(event.target)) {
-                contextMenu.remove();
+                contextMenu.style.display = 'none';
             }
         });
 
@@ -101,6 +96,6 @@ async function fetchData() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Document ready');  // Journal de débogage
+    console.log('Document ready');
     document.getElementById('fetchButton').addEventListener('click', fetchData);
 });
