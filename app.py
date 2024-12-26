@@ -24,16 +24,20 @@ def get_data():
 def add_nodes():
     data = request.get_json()
     source_id = data.get('source_id')
+    count = data.get('count', 1)  # Default to 1 if not provided
+
     new_nodes = []
-    for i in range(4):
+    new_edges = []
+
+    for i in range(count):
         new_node_id = f'{source_id}{i}'
         new_nodes.append(
             {'data': {'id': new_node_id}}
         )
-        new_nodes.append(
+        new_edges.append(
             {'data': {'id': f'{source_id}_{new_node_id}', 'source': source_id, 'target': new_node_id}}
         )
-    return jsonify(new_nodes)
+    return jsonify({'nodes': new_nodes, 'edges' : new_edges})
 
 @app.route('/')
 def index():
