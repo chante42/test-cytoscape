@@ -6,8 +6,6 @@ async function fetchData() {
         console.log('Fetching data with param:', param);
         const response = await fetch(`/data?param=${encodeURIComponent(param)}`);
         const data = await response.json();
-        
-        document.getElementById('content').innerText = data.message;
         console.log('Data received:', data);
 
         const cy = cytoscape({
@@ -35,11 +33,15 @@ async function fetchData() {
                 }
             ],
             layout: {
-                name: 'cose' // Utilisation de 'cose' pour initialement bien positionner le graphe
+                name: 'cose'
             }
         });
 
         console.log('Graph initialized');
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        document.body.appendChild(tooltip);
 
         // Ajouter l'événement contextmenu sur les nœuds
         cy.on('cxttap', 'node', function(evt) {
@@ -105,6 +107,42 @@ async function fetchData() {
             menu.appendChild(addNodeButton);
         });
 
+        // Afficher le tooltip et changer la couleur au survol d'un nœud
+        cy.on('mouseover', 'node', function(evt) {
+            const node = evt.target;
+            node.addClass('node-hover');
+
+            tooltip.innerText = `Node ID: ${node.id()}`;
+            tooltip.style.display = 'block';
+            tooltip.style.top = `${evt.renderedPosition.y}px`;
+            tooltip.style.left = `${evt.renderedPosition.x}px`;
+        });
+
+        // Réinitialiser la couleur et cacher le tooltip lors du retrait du survol d'un nœud
+        cy.on('mouseout', 'node', function(evt) {
+            const node = evt.target;
+            node.removeClass('node-hover');
+            tooltip.style.display = 'none';
+        });
+
+        // Afficher le tooltip et changer la couleur au survol d'une arête
+        cy.on('mouseover', 'edge', function(evt) {
+            const edge = evt.target;
+            edge.addClass('edge-hover');
+
+            tooltip.innerText = `Edge: ${edge.id()}`;
+            tooltip.style.display = 'block';
+            tooltip.style.top = `${evt.renderedPosition.y}px`;
+            tooltip.style.left = `${evt.renderedPosition.x}px`;
+        });
+
+        // Réinitialiser la couleur et cacher le tooltip lors du retrait du survol d'une arête
+        cy.on('mouseout', 'edge', function(evt) {
+            const edge = evt.target;
+            edge.removeClass('edge-hover');
+            tooltip.style.display = 'none';
+        });
+
         // Cacher le menu contextuel lorsqu'on clique en dehors
         document.addEventListener('click', function(event) {
             const contextMenu = document.getElementById('contextMenu');
@@ -123,14 +161,3 @@ async function fetchData() {
             if (highlightedNode) {
                 highlightedNode.style('background-color', '#FF4136');
             }
-        });
-
-    } catch (error) {
-        console.error('Erreur:', error);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Document ready');
-    document.getElementById('fetchButton').addEventListener('click', fetchData);
-});

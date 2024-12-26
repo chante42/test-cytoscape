@@ -33,13 +33,8 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 24px; /* Adjust size as needed */
-    color: #0074D9; /* Adjust color as needed */
-}
-
-#content {
-    margin-top: 20px;
-    font-size: 18px;
+    font-size: 24px;
+    color: #0074D9;
 }
 
 #cy {
@@ -55,7 +50,7 @@ body {
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 1px;
+    padding: 10px;
     display: none;
     z-index: 1000;
 }
@@ -80,7 +75,23 @@ body {
     display: block;
 }
 
-.node-highlight {
-    border: 3px solid #ff4136;
-    border-radius: 50%;
+.node-hover {
+    background-color: #FF4136 !important;
+}
+
+.edge-hover {
+    line-color: #FF4136 !important;
+    target-arrow-color: #FF4136 !important;
+}
+
+.tooltip {
+    position: fixed;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    pointer-events: none;
+    display: none;
+    z-index: 1001;
 }
